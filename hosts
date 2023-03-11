@@ -1,0 +1,13 @@
+[master]
+ec2-54-157-131-137.compute-1.amazonaws.com
+
+[worker]
+ec2-54-208-139-229.compute-1.amazonaws.com
+
+[cluster:children]
+master
+worker
+
+
+[cluster:vars]
+ansible_ssh_user=ubuntu

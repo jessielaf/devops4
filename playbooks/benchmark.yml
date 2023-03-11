@@ -1,0 +1,35 @@
+---
+- hosts: master
+  vars:
+    replicas:
+      - 1
+      - 2
+      - 4
+      - 8
+  tasks:
+    - name: remove whoami service
+      command: "docker service rm whoami"
+      become: yes
+      ignore_errors: True
+
+    - name: create whoami service
+      command: "docker service create --name whoami{{ item }} --publish published=808{{ index }},target=80 --replicas {{ item }} containous/whoami"
+      become: yes
+      loop: "{{ replicas }}"
+      loop_control:
+        index_var: index
+
+- hosts: localhost
+  gather_facts: yes
+  tasks:
+    - name: wrk 1
+      command: "wrk -t4 -c5 -d30s http://{{ hostvars | first }}:808{{ index }}"
+      register: wrk_output
+      loop: "{{ replicas }}"
+      loop_control:
+        index_var: index
+
+    - name:
+      ansible.builtin.debug:
+        msg: '{{ item["stdout_lines"] | select("search", "Req/Sec") }}'
+      loop: "{{ wrk_output['results'] }}"
