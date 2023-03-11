@@ -8,9 +8,12 @@
       - 8
   tasks:
     - name: remove whoami service
-      command: "docker service rm whoami"
+      command: "docker service rm whoami{{ item }}"
       become: yes
       ignore_errors: True
+      loop: "{{ replicas }}"
+      loop_control:
+        index_var: index
 
     - name: create whoami service
       command: "docker service create --name whoami{{ item }} --publish published=808{{ index }},target=80 --replicas {{ item }} containous/whoami"
@@ -20,6 +23,12 @@
         index_var: index
 
 - hosts: localhost
+  vars:
+    replicas:
+      - 1
+      - 2
+      - 4
+      - 8
   gather_facts: yes
   tasks:
     - name: wrk 1
